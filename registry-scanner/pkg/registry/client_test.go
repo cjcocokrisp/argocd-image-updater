@@ -15,7 +15,6 @@ import (
 	"github.com/distribution/distribution/v3/manifest/schema2"
 
 	"github.com/distribution/distribution/v3"
-	"github.com/distribution/distribution/v3/manifest/schema1" //nolint:staticcheck
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -397,11 +396,7 @@ func TestTagInfoFromReferences(t *testing.T) {
 
 func Test_TagMetadata(t *testing.T) {
 	t.Run("Check for correct error handling when manifest contains no history", func(t *testing.T) {
-		meta1 := &schema1.SignedManifest{ //nolint:staticcheck
-			Manifest: schema1.Manifest{ //nolint:staticcheck
-				History: []schema1.History{}, //nolint:staticcheck
-			},
-		}
+		meta1 := schema2.DeserializedManifest{}
 		ep, err := GetRegistryEndpoint("")
 		require.NoError(t, err)
 		client, err := NewClient(ep, "", "")
@@ -411,16 +406,7 @@ func Test_TagMetadata(t *testing.T) {
 	})
 
 	t.Run("Check for correct error handling when manifest contains invalid history", func(t *testing.T) {
-		meta1 := &schema1.SignedManifest{ //nolint:staticcheck
-			Manifest: schema1.Manifest{ //nolint:staticcheck
-				History: []schema1.History{ //nolint:staticcheck
-					{
-						V1Compatibility: `{"created": {"something": "notastring"}}`,
-					},
-				},
-			},
-		}
-
+		meta1 := schema2.DeserializedManifest{}
 		ep, err := GetRegistryEndpoint("")
 		require.NoError(t, err)
 		client, err := NewClient(ep, "", "")
@@ -430,15 +416,7 @@ func Test_TagMetadata(t *testing.T) {
 	})
 
 	t.Run("Check for correct error handling when manifest contains invalid history", func(t *testing.T) {
-		meta1 := &schema1.SignedManifest{ //nolint:staticcheck
-			Manifest: schema1.Manifest{ //nolint:staticcheck
-				History: []schema1.History{ //nolint:staticcheck
-					{
-						V1Compatibility: `{"something": "something"}`,
-					},
-				},
-			},
-		}
+		meta1 := &schema2.DeserializedManifest{}
 
 		ep, err := GetRegistryEndpoint("")
 		require.NoError(t, err)
@@ -451,11 +429,11 @@ func Test_TagMetadata(t *testing.T) {
 
 	t.Run("Check for invalid/valid timestamp and non-match platforms", func(t *testing.T) {
 		ts := "invalid"
-		meta1 := &schema1.SignedManifest{ //nolint:staticcheck
-			Manifest: schema1.Manifest{ //nolint:staticcheck
-				History: []schema1.History{ //nolint:staticcheck
-					{
-						V1Compatibility: `{"created":"` + ts + `"}`,
+		meta1 := &schema2.DeserializedManifest{
+			Manifest: schema2.Manifest{
+				Config: distribution.Descriptor{
+					Annotations: map[string]string{
+						"V1Compatibility": `{"created":` + ts + `"}`,
 					},
 				},
 			},
@@ -469,7 +447,7 @@ func Test_TagMetadata(t *testing.T) {
 
 		ts = time.Now().Format(time.RFC3339Nano)
 		opts := &options.ManifestOptions{}
-		meta1.Manifest.History[0].V1Compatibility = `{"created":"` + ts + `"}`
+		meta1.Manifest.Config.Annotations["V1Compatibility"] = `{"created":"` + ts + `"}`
 		tagInfo, _ := client.TagMetadata(meta1, opts)
 		assert.Equal(t, ts, tagInfo.CreatedAt.Format(time.RFC3339Nano))
 

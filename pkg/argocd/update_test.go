@@ -27,7 +27,8 @@ import (
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/distribution/distribution/v3/manifest/schema1" //nolint:staticcheck
+	"github.com/distribution/distribution/v3"
+	"github.com/distribution/distribution/v3/manifest/schema2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -789,19 +790,20 @@ func Test_UpdateApplication(t *testing.T) {
 	})
 
 	t.Run("Test skip because of match-tag pattern doesn't match", func(t *testing.T) {
-		meta := make([]*schema1.SignedManifest, 4) //nolint:staticcheck
+		meta := make([]*schema2.DeserializedManifest, 4)
 		for i := 0; i < 4; i++ {
 			ts := fmt.Sprintf("2006-01-02T15:%.02d:05.999999999Z", i)
-			meta[i] = &schema1.SignedManifest{ //nolint:staticcheck
-				Manifest: schema1.Manifest{ //nolint:staticcheck
-					History: []schema1.History{ //nolint:staticcheck
-						{
-							V1Compatibility: `{"created":"` + ts + `"}`,
+			meta[i] = &schema2.DeserializedManifest{
+				Manifest: schema2.Manifest{
+					Config: distribution.Descriptor{
+						Annotations: map[string]string{
+							"V1Compatibility": `{"created":` + ts + `"}`,
 						},
 					},
 				},
 			}
 		}
+
 		called := 0
 		mockClientFn := func(endpoint *registry.RegistryEndpoint, username, password string) (registry.RegistryClient, error) {
 			regMock := regmock.RegistryClient{}
@@ -867,19 +869,20 @@ func Test_UpdateApplication(t *testing.T) {
 	})
 
 	t.Run("Test skip because of ignored", func(t *testing.T) {
-		meta := make([]*schema1.SignedManifest, 4) //nolint:staticcheck
+		meta := make([]*schema2.DeserializedManifest, 4)
 		for i := 0; i < 4; i++ {
 			ts := fmt.Sprintf("2006-01-02T15:%.02d:05.999999999Z", i)
-			meta[i] = &schema1.SignedManifest{ //nolint:staticcheck
-				Manifest: schema1.Manifest{ //nolint:staticcheck
-					History: []schema1.History{ //nolint:staticcheck
-						{
-							V1Compatibility: `{"created":"` + ts + `"}`,
+			meta[i] = &schema2.DeserializedManifest{
+				Manifest: schema2.Manifest{
+					Config: distribution.Descriptor{
+						Annotations: map[string]string{
+							"V1Compatibility": `{"created":` + ts + `"}`,
 						},
 					},
 				},
 			}
 		}
+
 		called := 0
 		mockClientFn := func(endpoint *registry.RegistryEndpoint, username, password string) (registry.RegistryClient, error) {
 			regMock := regmock.RegistryClient{}

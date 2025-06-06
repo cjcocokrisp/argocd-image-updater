@@ -15,7 +15,6 @@ import (
 	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/distribution/distribution/v3/manifest/ocischema"
-	"github.com/distribution/distribution/v3/manifest/schema1" //nolint:staticcheck
 	"github.com/distribution/distribution/v3/manifest/schema2"
 	"github.com/distribution/distribution/v3/reference"
 	"github.com/distribution/distribution/v3/registry/client"
@@ -38,7 +37,6 @@ import (
 // knownMediaTypes is the list of media types we can process
 var knownMediaTypes = []string{
 	ocischema.SchemaVersion.MediaType,
-	schema1.MediaTypeSignedManifest, //nolint:staticcheck
 	schema2.SchemaVersion.MediaType,
 	manifestlist.SchemaVersion.MediaType,
 	ociv1.MediaTypeImageIndex,
@@ -211,34 +209,6 @@ func (client *registryClient) TagMetadata(manifest distribution.Manifest, opts *
 	// Also ManifestLists (e.g. on multi-arch images) are supported.
 	//
 	switch deserialized := manifest.(type) {
-
-	case *schema1.SignedManifest: //nolint:staticcheck
-		var man schema1.Manifest = deserialized.Manifest //nolint:staticcheck
-		if len(man.History) == 0 {
-			return nil, fmt.Errorf("no history information found in schema V1")
-		}
-
-		_, mBytes, err := manifest.Payload()
-		if err != nil {
-			return nil, err
-		}
-		ti.Digest = sha256.Sum256(mBytes)
-
-		logCtx.Tracef("v1 SHA digest is %s", ti.EncodedDigest())
-		if err := json.Unmarshal([]byte(man.History[0].V1Compatibility), &info); err != nil {
-			return nil, err
-		}
-		if !opts.WantsPlatform(info.OS, info.Arch, "") {
-			logCtx.Debugf("ignoring v1 manifest %v. Manifest platform: %s, requested: %s",
-				ti.EncodedDigest(), options.PlatformKey(info.OS, info.Arch, info.Variant), strings.Join(opts.Platforms(), ","))
-			return nil, nil
-		}
-		if createdAt, err := time.Parse(time.RFC3339Nano, info.Created); err != nil {
-			return nil, err
-		} else {
-			ti.CreatedAt = createdAt
-		}
-		return ti, nil
 
 	case *manifestlist.DeserializedManifestList:
 		var list manifestlist.DeserializedManifestList = *deserialized
