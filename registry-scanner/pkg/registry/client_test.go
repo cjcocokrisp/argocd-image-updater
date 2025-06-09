@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/distribution/distribution/v3/manifest"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/distribution/distribution/v3/manifest/ocischema"
 	"github.com/distribution/distribution/v3/manifest/schema2"
 
 	"github.com/distribution/distribution/v3"
+	"github.com/opencontainers/image-spec/specs-go"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -462,9 +462,8 @@ func Test_TagMetadata_2(t *testing.T) {
 	t.Run("ocischema DeserializedManifest invalid digest format", func(t *testing.T) {
 		meta1 := &ocischema.DeserializedManifest{
 			Manifest: ocischema.Manifest{
-				Versioned: manifest.Versioned{
+				Versioned: specs.Versioned{
 					SchemaVersion: 1,
-					MediaType:     "",
 				},
 			},
 		}
@@ -481,9 +480,8 @@ func Test_TagMetadata_2(t *testing.T) {
 	t.Run("schema2 DeserializedManifest invalid digest format", func(t *testing.T) {
 		meta1 := &schema2.DeserializedManifest{
 			Manifest: schema2.Manifest{
-				Versioned: manifest.Versioned{
+				Versioned: specs.Versioned{
 					SchemaVersion: 1,
-					MediaType:     "",
 				},
 				Config: distribution.Descriptor{
 					MediaType: "",
@@ -504,9 +502,8 @@ func Test_TagMetadata_2(t *testing.T) {
 	t.Run("ocischema DeserializedImageIndex empty index not supported", func(t *testing.T) {
 		meta1 := &ocischema.DeserializedImageIndex{
 			ImageIndex: ocischema.ImageIndex{
-				Versioned: manifest.Versioned{
+				Versioned: specs.Versioned{
 					SchemaVersion: 1,
-					MediaType:     "",
 				},
 				Manifests:   nil,
 				Annotations: nil,
@@ -525,9 +522,8 @@ func Test_TagMetadata_2(t *testing.T) {
 	t.Run("ocischema DeserializedImageIndex empty manifestlist not supported", func(t *testing.T) {
 		meta1 := &manifestlist.DeserializedManifestList{
 			ManifestList: manifestlist.ManifestList{
-				Versioned: manifest.Versioned{
+				Versioned: specs.Versioned{
 					SchemaVersion: 1,
-					MediaType:     "",
 				},
 				Manifests: nil,
 			},

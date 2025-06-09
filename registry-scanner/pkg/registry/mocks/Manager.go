@@ -5,7 +5,7 @@ package mocks
 import (
 	http "net/http"
 
-	challenge "github.com/distribution/distribution/v3/registry/client/auth/challenge"
+	challenge "github.com/distribution/distribution/v3/registry/auth"
 
 	mock "github.com/stretchr/testify/mock"
 
